@@ -4,15 +4,13 @@ import (
 	"sync"
 )
 
-// todo: add expiration
-
-type Item struct {
-	Object interface{}
+type item struct {
+	Elem interface{} `json:"elem"`
 }
 
 type Cache struct {
 	mu    sync.RWMutex
-	items []Item
+	items []item
 }
 
 func New() *Cache {
@@ -27,8 +25,8 @@ func (c *Cache) AddItem(x interface{}) {
 		c.mu.Unlock()
 	}()
 
-	c.items = append(c.items, Item{
-		Object: x,
+	c.items = append(c.items, item{
+		Elem: x,
 	})
 }
 

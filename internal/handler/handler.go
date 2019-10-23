@@ -21,7 +21,7 @@ func New(worker *worker.Worker, logger *logrus.Logger) *FastHTTPHandler {
 	}
 }
 
-type OkResponseWithResult struct {
+type okResponseWithResult struct {
 	Result worker.LastTwoElemsFromCache `json:"result"`
 }
 
@@ -37,14 +37,18 @@ func (f *FastHTTPHandler) sendOkResponseWithResult(ctx *fasthttp.RequestCtx, tar
 }
 
 func (f *FastHTTPHandler) LastTwoElemsFromCache(ctx *fasthttp.RequestCtx) {
-	elemlemsFromCache, err := f.worker.ElemsFromCache()
+	elemsFromCache, err := f.worker.ElemsFromCache()
 
 	if err != nil {
 		f.sendError(err.Error(), 500, ctx)
 		return
 	}
 
-	err = f.sendOkResponseWithResult(ctx, elemlemsFromCache)
+	okResponseWithResult := okResponseWithResult{
+		Result: elemsFromCache,
+	}
+
+	err = f.sendOkResponseWithResult(ctx, okResponseWithResult)
 
 	// info, так как ошибка может быть вызвана и закрытием сокета клиента и при высокой нагрузке будет спам в логах
 	if err != nil {

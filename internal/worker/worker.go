@@ -60,8 +60,7 @@ func (w *Worker) Close() {
 }
 
 func (w *Worker) getString() string {
-	s := uuid.New().String()[:]
-	return s[:w.cfg.LenStringForAddToCache]
+	return uuid.New().String()[:w.cfg.LenStringForAddToCache]
 }
 
 // start gen and add new string to cache
