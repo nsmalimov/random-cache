@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+
 	"random-cache/internal/worker"
 
 	"github.com/sirupsen/logrus"
@@ -31,22 +32,23 @@ func (f *FastHTTPHandler) sendError(text string, code int, ctx *fasthttp.Request
 func (f *FastHTTPHandler) sendOkResponseWithResult(ctx *fasthttp.RequestCtx, targetStruct interface{}) error {
 	ctx.SetContentType("application/json")
 	enc := json.NewEncoder(ctx.Response.BodyWriter())
+
 	return enc.Encode(targetStruct)
 }
 
-func (t *FastHTTPHandler) LastTwoElemsFromCache(ctx *fasthttp.RequestCtx) {
-	lastTwoElemsFromCache, err := t.worker.LastTwoElemsFromCache()
+func (f *FastHTTPHandler) LastTwoElemsFromCache(ctx *fasthttp.RequestCtx) {
+	elemlemsFromCache, err := f.worker.ElemsFromCache()
 
 	if err != nil {
-		t.sendError(err.Error(), 500, ctx)
+		f.sendError(err.Error(), 500, ctx)
 		return
 	}
 
-	err = t.sendOkResponseWithResult(ctx, lastTwoElemsFromCache)
+	err = f.sendOkResponseWithResult(ctx, elemlemsFromCache)
 
-	// удалить если ожидается высокая нагрузка, так как ошибка может быть вызвана и закрытием сокета клиента
+	// info, так как ошибка может быть вызвана и закрытием сокета клиента и при высокой нагрузке будет спам в логах
 	if err != nil {
-		t.logger.Errorf("Error when try t.sendOkResponseWithResult[(t *FastHTTPHandler) "+
+		f.logger.Infof("Error when try t.sendOkResponseWithResult[(t *FastHTTPHandler) "+
 			"LastTwoElemsFromCache], err: %s", err)
 		return
 	}

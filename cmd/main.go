@@ -45,24 +45,27 @@ func main() {
 	stopProgramChan := make(chan os.Signal, 1)
 	signal.Notify(stopProgramChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// default level:
-	logger := logrus.New()
-
-	fmt.Println(logger.Level)
-
-	worker := w.New()
-
-	handler := h.New(worker, logger)
-
+	// need validate cfg
 	cfg := &c.Config{
-		BindAddress:            "localhost",
-		BindPort:               8080,
-		LenStringForAddToCache: 6,
-		FrequencyAddToCacheSec: 2,
-		EndPointStr:            "last_two_elems_from_cache",
+		BindAddress:                         "localhost",
+		BindPort:                            8080,
+		LenStringForAddToCache:              6,
+		FrequencyAddToCacheSec:              2,
+		HowMuchLastElemsFromCacheNeedReturn: 2,
+		EndPointStr:                         "last_two_elems_from_cache",
 	}
 
-	// need validate cfg
+	// default level: info
+	logger := logrus.New()
+
+	worker := w.New(cfg, logger)
+
+	// start timer for add in cache
+	// начнёт добавлять уже до непосредственного старта сервера, по идее надо подумать как
+	// отловить событие старта сервера и уже потом запускать таймер
+	go worker.Init()
+
+	handler := h.New(worker, logger)
 
 	router := fasthttprouter.New()
 
@@ -71,7 +74,8 @@ func main() {
 	wrappedFastHTTPHandler := wrapHandler(router)
 
 	fastHTTPServer := &fasthttp.Server{
-		Handler: wrappedFastHTTPHandler,
+		Handler:          wrappedFastHTTPHandler,
+		DisableKeepalive: true,
 	}
 
 	go gracefullShutdown(stopProgramChan, logger, fastHTTPServer, worker)

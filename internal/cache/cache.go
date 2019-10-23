@@ -36,14 +36,14 @@ func (c *Cache) ItemByIndex(index int) (interface{}, bool) {
 	c.mu.RLock()
 
 	defer func() {
-		c.mu.Unlock()
+		c.mu.RUnlock()
 	}()
 
 	if len(c.items) <= index {
 		return nil, false
-	} else {
-		return c.items[index], true
 	}
+
+	return c.items[index], true
 }
 
 func (c *Cache) Size() int {
